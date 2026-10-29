@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>custom_drone_monitor</name>
+  <version>0.1.0</version>
+  <description>Read-only ROS 2 telemetry monitor for the PX4 x700 development example.</description>
+  <maintainer email="dev@example.com">PX4 x700 example maintainer</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <depend>px4_msgs</depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
