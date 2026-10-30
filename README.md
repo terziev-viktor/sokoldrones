@@ -38,7 +38,7 @@ PX4 flight controller → ESCs and motors
 - **Companion computer:** Radxa Cubie A7A.
 - **Middleware:** ROS 2 Jazzy in the companion workspace, `px4_msgs` matched to the PX4 firmware, and the PX4 uXRCE-DDS client with Micro XRCE-DDS Agent on the companion.
 - **Object detection:** YOLOv8n and its COCO pretrained classes for common objects such as cars.
-- **Language model:** Anything between 7 and 14 billion parapeters should be smart enought for the job. The A7A should be able to run it. Validate the claim.
+- **Language model:** Qwen2.5-1.5B-Instruct Q4_K_M on CPU using vendored A733 project llama.cpp helper code. Its published benchmark is about 8.5 tokens/s and 2 GB RSS on an Orange Pi Zero 3W; verify memory, CPU-core mapping, and latency on the Cubie A7A.
 - **Ground station:** QGroundControl
 
 ## What is connected
@@ -50,6 +50,7 @@ PX4 flight controller → ESCs and motors
 | Firmware registration | `PX4-Autopilot/ROMFS/px4fmu_common/init.d-posix/airframes/CMakeLists.txt` | Includes the airframe in the PX4 ROMFS build. |
 | Companion application | `companion_ws/src/custom_drone_monitor/` | ROS 2 Python node subscribes to vehicle status and local odometry. It does not send flight commands. |
 | NPU vision inference | `companion_ws/src/custom_drone_vision/` | ROS 2 camera node runs A733-targeted NBG models through the Cubie A7A AWNN/VIPLite runtime; ONNX models must be converted to NBG before deployment. |
+| Mission proposal generation | `companion_ws/src/custom_drone_mission/` | Python ROS 2 service vendors the A733 project's one-shot llama.cpp helper logic with Qwen2.5-1.5B-Instruct Q4_K_M on CPU; it returns a schema-checked proposal and sends no flight commands. |
 
 The model uses primitive shapes rather than copied X500 assets so its larger dimensions are obvious and editable. Rotor positions are ±0.225 m on each body axis, compared with ±0.174 m in X500 (about 1.29× the arm footprint). Its mass, inertia, propeller/motor constants, and hover-throttle value are illustrative starting estimates, not measured specifications. The IMU, magnetometer, and barometer have small Gaussian noise on purpose: PX4 treats a sensor that repeats identical values as stale and removes it from estimator use.
 
@@ -110,6 +111,17 @@ package on the board against its AWNN/VIPLite v2.0 runtime; see
 for the ONNX-to-NBG conversion requirement, build setup, camera parameters,
 and launch example. The node only executes NBG artifacts on the NPU and does
 not silently fall back to CPU inference.
+
+### Generate a mission proposal with a local Qwen model on CPU
+
+The Python `custom_drone_mission` package provides a synchronous
+`/generate_mission` service backed by Qwen2.5-1.5B-Instruct Q4_K_M through
+llama.cpp on CPU. It only returns a high-level, schema-checked proposal: a
+separate deterministic mission executive must validate limits and obtain
+operator approval before execution. The node does not publish PX4 commands. See
+[`custom_drone_mission/README.md`](companion_ws/src/custom_drone_mission/README.md)
+for llama.cpp/model setup, build instructions, CPU core selection, and the
+service example.
 
 ## Customize the vehicle
 
