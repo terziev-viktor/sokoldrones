@@ -49,6 +49,7 @@ PX4 flight controller → ESCs and motors
 | PX4 vehicle configuration | `PX4-Autopilot/ROMFS/px4fmu_common/init.d-posix/airframes/22000_gz_x700` | Maps the four control-allocation rotors and Gazebo motor outputs; sets starting parameter defaults. |
 | Firmware registration | `PX4-Autopilot/ROMFS/px4fmu_common/init.d-posix/airframes/CMakeLists.txt` | Includes the airframe in the PX4 ROMFS build. |
 | Companion application | `companion_ws/src/custom_drone_monitor/` | ROS 2 Python node subscribes to vehicle status and local odometry. It does not send flight commands. |
+| NPU vision inference | `companion_ws/src/custom_drone_vision/` | ROS 2 camera node runs A733-targeted NBG models through the Cubie A7A AWNN/VIPLite runtime; ONNX models must be converted to NBG before deployment. |
 
 The model uses primitive shapes rather than copied X500 assets so its larger dimensions are obvious and editable. Rotor positions are ±0.225 m on each body axis, compared with ±0.174 m in X500 (about 1.29× the arm footprint). Its mass, inertia, propeller/motor constants, and hover-throttle value are illustrative starting estimates, not measured specifications. The IMU, magnetometer, and barometer have small Gaussian noise on purpose: PX4 treats a sensor that repeats identical values as stale and removes it from estimator use.
 
@@ -100,6 +101,15 @@ ROS_DOMAIN_ID=42 ros2 run custom_drone_monitor vehicle_monitor
 
 Build and source `px4_msgs` in the same ROS 2 environment used to run the app and `ros2 topic echo`; otherwise ROS 2 can discover a topic's type name but report that its message type is invalid. The app prints armed state, mode, and local position once per second. It intentionally only subscribes to `/fmu/out/vehicle_status` and `/fmu/out/vehicle_odometry`; no commands are published.
 For a real companion computer, install the matching ROS 2 distribution and agent there, connect it to PX4 over a dedicated serial or Ethernet link, and keep the unauthenticated DDS network isolated.
+
+### Run camera inference on the Cubie A7A NPU
+
+The Cubie A7A uses an Allwinner A733 with a Vivante VIP9000 NPU. Build this
+package on the board against its AWNN/VIPLite v2.0 runtime; see
+[`custom_drone_vision/README.md`](companion_ws/src/custom_drone_vision/README.md)
+for the ONNX-to-NBG conversion requirement, build setup, camera parameters,
+and launch example. The node only executes NBG artifacts on the NPU and does
+not silently fall back to CPU inference.
 
 ## Customize the vehicle
 
