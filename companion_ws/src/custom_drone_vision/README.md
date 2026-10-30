@@ -8,6 +8,16 @@ The A733 board does not run an arbitrary `.onnx` file directly through a generic
 
 Follow Radxa's [ACUITY Toolkit setup](https://docs.radxa.com/en/cubie/a7a/app-dev/npu-dev/cubie-acuity-env), [model conversion guide](https://docs.radxa.com/en/cubie/a7a/app-dev/npu-dev/cubie-acuity-usage), and [A733 ResNet50 ONNX example](https://docs.radxa.com/en/cubie/a7a/app-dev/npu-dev/cubie-resnet50) to convert and validate ONNX models. The ACUITY toolkit runs on the model-preparation host; the generated A733 NBG and the AWNN/VIPLite runtime are used on the Cubie.
 
+## Ready-to-use NBG models
+
+Radxa's [A7A Model Zoo](https://docs.radxa.com/en/cubie/a7a/app-dev/npu-dev/model-zoo) contains prebuilt model deployment examples, including YOLOv8, YOLO11, RetinaFace, MobileNet, and ResNet. Download the archive using the [Model Zoo download guide](https://docs.radxa.com/en/cubie/a7a/app-dev/npu-dev/model-zoo/model-zoo-download):
+
+```bash
+wget https://dl.radxa.com/cubie/allwinner-model-zoo.tar.gz
+```
+
+For an object-detection starting point, see Radxa's [YOLOv8 A733 example](https://docs.radxa.com/en/cubie/a7a/app-dev/npu-dev/model-zoo/yolov8). It includes an A733-targeted NBG (for example, `yolov8n_6_uint8_a733.nb`) and a board-side demo. Use models built for **A733**, not T527; their NBG files and runtime versions are not interchangeable. Try the model with Radxa's demo first, then configure this ROS node to match the model's input shape, preprocessing, and output tensor counts. The demo's model-specific output decoding is not included in this generic node.
+
 Radxa's A733 examples use the `ai-sdk` checkout and VIPLite v2.0. Install the matching board runtime and checkout the SDK on the Cubie A7A. The SDK's `examples/libawnn_viplite` source and `viplite-tina/lib/aarch64-none-linux-gnu/v2.0` libraries are used when building this package.
 
 ## Build on the Cubie A7A
