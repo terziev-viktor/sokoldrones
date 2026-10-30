@@ -1,7 +1,45 @@
 # Developing a Custom PX4 Drone
 
 This workspace contains a deliberately simple example named **x700**: a larger X-frame multicopter model for Gazebo, its PX4 SITL airframe configuration, and a read-only ROS 2 companion-computer monitor.
-It is a development walkthrough, not a flight-ready aircraft definition.
+It is a development walkthrough, not a flight-ready aircraft definition. See commit history for details
+
+## Project Plan: Prompt-Driven Drone with Onboard AI
+
+### Goal
+
+Develop a low-cost PX4 drone whose companion computer interprets an operator's natural-language request, plans a bounded mission, detects objects with its camera, and reports or acts on detections. Example prompt: "search an approved area for a red car, capture a photo, then return"
+
+The language model must not control motors or bypass PX4. It proposes a structured mission; a deterministic mission executive validates it, and PX4 remains responsible for flight control, stabilization, and failsafes. Keep a human operator able to approve missions and take over through QGroundControl.
+
+### Target Architecture
+
+```text
+Operator / QGroundControl
+  ├─ Prompt, mission approval, telemetry, and manual takeover (MAVLink)
+  └─ Ground station link
+          │
+          ▼
+Companion computer: Radxa Cubie A7A (Linux, ROS 2)
+  ├─ Prompt interpreter: local LLM → structured mission proposal
+  ├─ Mission executive: validate limits, request approval, execute mission
+  ├─ Vision node: camera → YOLOv8n detection → optional red-car check
+  ├─ Photo/event storage
+  └─ PX4 ROS 2 interface via uXRCE-DDS
+          │ serial or Ethernet
+          ▼
+PX4 flight controller → ESCs and motors
+  ├─ Estimation, navigation, and stabilization
+  └─ Geofence, battery, link-loss, and other configured failsafes
+```
+
+### Planned Hardware and Software
+
+- **Flight platform:** PX4-compatible multicopter and supported flight controller.
+- **Companion computer:** Radxa Cubie A7A.
+- **Middleware:** ROS 2 Jazzy in the companion workspace, `px4_msgs` matched to the PX4 firmware, and the PX4 uXRCE-DDS client with Micro XRCE-DDS Agent on the companion.
+- **Object detection:** YOLOv8n and its COCO pretrained classes for common objects such as cars.
+- **Language model:** Anything between 7 and 14 billion parapeters should be smart enought for the job. The A7A should be able to run it. Validate the claim.
+- **Ground station:** QGroundControl
 
 ## What is connected
 
